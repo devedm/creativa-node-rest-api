@@ -1,24 +1,25 @@
+// require class
 const DataBaseHelper = require('../../helper/db.helper');
 
-ping = async () => {
-    try {
+const SCHEMA = process.env.DB_SCHEMA || 'public'
 
+// For test the health of microservice
+ping = async() => {
+    try {
         const dbHelper = new DataBaseHelper();
         const instance = dbHelper.init();
 
         const result = await instance.select(`
             SELECT 
                 status, environment 
-            FROM
-                ucreativa.ping;
+            FROM 
+            ${SCHEMA}.ping
         `);
 
-        console.log(result);
-        return result[0];
-
-    } catch (error) {
-        console.log(error);
-        throw error;
+        return result;
+    } catch (e) {
+        console.log("error " + e);
+        throw e;
     }
 }
 

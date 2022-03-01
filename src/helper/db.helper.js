@@ -1,72 +1,75 @@
-const { finalizeSession } = require('pg/lib/sasl');
+const res = require('express/lib/response');
+const { database } = require('pg/lib/defaults');
 
-const Pool = require('pq').Pool;
+const Pool = require('pg').Pool;
 
 class DataBaseHelper {
 
     constructor() { }
 
     init = () => {
-        console.log('inizializando la base de datos')
+        console.log('Inicializando la base de datos...');
+
         let pool = null;
         let result = null;
 
         pool = new Pool({
             host: "localhost",
-            database: "postgress",
+            database: "postgres",
             user: "postgres",
             password: "postgres",
             port: 5432,
             max: 25
         });
 
-        let getPoolConnection = async () => {
-            return await pool.connection();
+        let getPoolConnect = async () => {
+            return await pool.connect();
         }
 
-        //Select
+        // Select's
         let select = async (sql) => {
             const client = await pool.connect();
 
             try {
-                await client.query('BEGIN')
+                await client.query('BEGIN');
                 result = await client.query(sql);
-                await client.query('COMMIT')
+                await client.query('COMMIT');
             } catch (error) {
                 await client.query('ROLLBACK');
                 throw error;
             } finally {
                 client.release(true);
             }
+
             return result.rows;
         }
 
-        //Delete, update, insert
+        // Delete's, Update's, Insert's 
         let query = async () => {
             const client = await pool.connect();
 
             try {
-                await client.query('BEGIN')
+                await client.query('BEGIN');
                 let queryResult = await client.query(`${sql} RETURNING id, uuid`);
-                result = await client.query(sql);
-                await client.query('COMMIT')
+                result = queryResult.rows[0];
+
+                await client.query('COMMIT');
             } catch (error) {
-                await client.query('ROLLBACK')
+                await client.query('ROLLBACK');
                 throw error;
             } finally {
                 client.require(true);
             }
+
             return result;
         }
 
         return {
             select: select,
             query: query,
-            poolConnection: getPoolConnection
+            poolConnect: getPoolConnect
         }
     }
-
 }
-
 
 module.exports = DataBaseHelper;
